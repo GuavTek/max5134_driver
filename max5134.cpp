@@ -13,7 +13,7 @@ void max5134_c::init(uint8_t slave_num){
 }
 
 void max5134_c::update(){
-    if(com->Get_Status() == com_state_e::Idle){
+    if(com->Get_Status() != com_state_e::Idle){
         return;
     }
     if (pending_reset){
@@ -97,7 +97,7 @@ uint8_t max5134_c::optimize_linearity(uint8_t optimize){
     com_buff[0] = 0b00000101;
     com_buff[1] = optimize << 1;
     com_buff[2] = 0;
-    if(com->Get_Status() != com_state_e::Idle){
+    if(com->Get_Status() == com_state_e::Idle){
         com->Select_Slave(com_slave_num);
         com->Transfer(com_buff, 3, Tx);
         return 1;
@@ -109,7 +109,7 @@ void max5134_c::reset(){
     com_buff[0] = 0b00000010;
     com_buff[1] = 0;
     com_buff[2] = 0;
-    if(com->Get_Status() != com_state_e::Idle){
+    if(com->Get_Status() == com_state_e::Idle){
         com->Select_Slave(com_slave_num);
         com->Transfer(com_buff, 3, Tx);
         pending_reset = 0;
