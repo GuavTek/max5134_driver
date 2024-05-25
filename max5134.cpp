@@ -7,11 +7,6 @@
 
 #include "max5134.h"
 
-void max5134_c::init(uint8_t slave_num){
-    com_slave_num = slave_num;
-	com->Set_Slave_Callback(slave_num, this);
-}
-
 void max5134_c::update(){
     if(com->Get_Status() != com_state_e::Idle){
         return;
@@ -57,7 +52,7 @@ void max5134_c::set_powered(){
     com_buff[1] = power_state & 0x0f;
     com_buff[2] = (power_state & 0b00010000) << 3;
     if (com->Get_Status() == com_state_e::Idle){
-        com->Select_Slave(com_slave_num);
+        Set_SS(1);
         com->Transfer(com_buff, 3, Tx);
         power_state &= 0x7f;
     }
@@ -75,7 +70,7 @@ void max5134_c::set_outputs(){
     com_buff[1] = updating;
     com_buff[2] = 0;
     if (com->Get_Status() == com_state_e::Idle){
-        com->Select_Slave(com_slave_num);
+        Set_SS(1);
         com->Transfer(com_buff, 3, Tx);
         need_update &= ~(updating << 4);
     }
@@ -87,7 +82,7 @@ void max5134_c::write_to_dac(uint8_t output){
     com_buff[1] = (dac_value[output] >> 8) & 0xff;
     com_buff[2] = dac_value[output] & 0xff;
     if (com->Get_Status() == com_state_e::Idle){
-        com->Select_Slave(com_slave_num);
+        Set_SS(1);
         com->Transfer(com_buff, 3, Tx);
         need_update &= ~(0b00010001 << output);
     }
@@ -98,7 +93,7 @@ uint8_t max5134_c::optimize_linearity(uint8_t optimize){
     com_buff[1] = optimize << 1;
     com_buff[2] = 0;
     if(com->Get_Status() == com_state_e::Idle){
-        com->Select_Slave(com_slave_num);
+        Set_SS(1);
         com->Transfer(com_buff, 3, Tx);
         return 1;
     }
@@ -110,7 +105,7 @@ void max5134_c::reset(){
     com_buff[1] = 0;
     com_buff[2] = 0;
     if(com->Get_Status() == com_state_e::Idle){
-        com->Select_Slave(com_slave_num);
+        Set_SS(1);
         com->Transfer(com_buff, 3, Tx);
         pending_reset = 0;
     } else {
@@ -119,7 +114,7 @@ void max5134_c::reset(){
 }
 
 void max5134_c::com_cb(){
-    com->Select_Slave(-1);
+    Set_SS(0);
     for (uint8_t i = 0; i < 4; i++){
         if (need_update & (1 << i)){
             write_to_dac(i);

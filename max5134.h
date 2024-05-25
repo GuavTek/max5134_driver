@@ -14,7 +14,6 @@
 
 class max5134_c : public com_driver_c {
 	public:
-		void init(uint8_t slave_num); // Initialize communication driver
 		void update(); // Try to update DAC registers if needed
         void set(uint16_t value, uint8_t output, uint8_t write_thru);
         void set(uint16_t value[4], uint8_t write_thru);
@@ -23,11 +22,8 @@ class max5134_c : public com_driver_c {
 		uint8_t optimize_linearity(uint8_t optimize); // Optimize must be set for 10ms to guarantee linearity
         void reset();	// Send a RESET command to the MAX5134
 		virtual void com_cb();	// The callback called when the com object is done transmitting data
-		max5134_c(communication_base_c* const comInstance) {com = comInstance;};
-		~max5134_c() {};
+		using com_driver_c::com_driver_c;
 	protected:
-		communication_base_c* com;	// The communication driver to access the MAX5134
-		uint8_t com_slave_num;	// The com driver may have multiple slaves, this is the number for this object
 		uint16_t dac_value[4];
 		uint8_t need_update;	// DAC values needing update
 		uint8_t pending_reset;	// Reset is pending
